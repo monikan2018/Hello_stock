@@ -11,7 +11,7 @@ export class SupabaseService {
   private readonly LOCK_RETRY_DELAY = 1000; // 1 second
 
   constructor() {
-    console.log('Initializing Supabase with URL:', environment.supabase.url);
+    console.log('Initializing Supabase with URL:', environment.supabase.supabaseUrl);
     this.initializeSupabase();
   }
 
@@ -20,19 +20,23 @@ export class SupabaseService {
     await this.clearAuthLocks();
     
     this.supabase = createClient(
-      environment.supabase.url,
-      environment.supabase.anonKey,
+      environment.supabase.supabaseUrl,
+      environment.supabase.supabaseAnonKey,
       {
         auth: {
-          autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: true,
-          flowType: 'pkce',
-          storage: this.createCustomStorage(),
-          lockTimeout: 5000 // 5 seconds timeout for locks
+          autoRefreshToken: true,
+          detectSessionInUrl: false
         }
       }
     );
+
+    // Log the configuration for debugging
+    console.log('Supabase Configuration:', {
+      url: environment.supabase.supabaseUrl,
+      keyValid: !!environment.supabase.supabaseAnonKey,
+      keyLength: environment.supabase.supabaseAnonKey.length
+    });
 
     // Set up auth state change listener
     this.supabase.auth.onAuthStateChange(async (event, session) => {
