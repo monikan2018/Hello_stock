@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.landing-container {
+  font-family: 'Inter', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+// Hero Section
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 80vh;
+  gap: 4rem;
+  
+  .hero-content {
+    flex: 1;
+    
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(120deg, #2563eb, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+  }
+  
+  .hero-image {
+    flex: 1;
+    img {
+      width: 100%;
+      height: auto;
+      animation: float 6s ease-in-out infinite;
+    }
+  }
+}
+
+// Features Section
+.features {
+  padding: 6rem 0;
+  text-align: center;
+  
+  h2 {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: #1e293b;
+  }
+  
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+  
+  .feature-card {
+    padding: 2rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+    }
+    
+    .material-icons {
+      font-size: 2.5rem;
+      color: #2563eb;
+      margin-bottom: 1rem;
+    }
+    
+    h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #1e293b;
+    }
+    
+    p {
+      color: #64748b;
+      line-height: 1.6;
+    }
+  }
+}
+
+// CTA Section
+.cta-section {
+  background: linear-gradient(120deg, #2563eb, #7c3aed);
+  border-radius: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+  margin: 4rem 0;
+  
+  .cta-content {
+    max-width: 600px;
+    margin: 0 auto;
+    
+    h2 {
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+    }
+  }
+}
+
+// Buttons
+.btn {
+  display: inline-block;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  
+  &.btn-primary {
+    background: #2563eb;
+    color: white;
+    
+    &:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+    }
+  }
+  
+  &.btn-secondary {
+    background: white;
+    color: #2563eb;
+    margin-left: 1rem;
+    
+    &:hover {
+      background: #f8fafc;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Animations
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    
+    .hero-content h1 {
+      font-size: 2.5rem;
+    }
+  }
+  
+  .features .features-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cta-section .cta-content h2 {
+    font-size: 2rem;
+  }
+} 
