@@ -1,0 +1,19 @@
+<div class="app-container">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h1>Stock Tracker</h1>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+      <a routerLink="/portfolio" routerLinkActive="active">Portfolio</a>
+      <a routerLink="/stocks" routerLinkActive="active">Stocks</a>
+    </div>
+    <div class="auth-buttons">
+      <a routerLink="/login" class="auth-button">Sign In</a>
+      <a routerLink="/register" class="auth-button primary">Sign Up</a>
+    </div>
+  </nav>
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div> 

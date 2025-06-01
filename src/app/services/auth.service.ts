@@ -88,10 +88,7 @@ export class AuthService {
     return from(this.supabaseService.signUp(
       userData.email,
       userData.password,
-      {
-        firstName: userData.firstName,
-        lastName: userData.lastName
-      }
+      `${userData.firstName} ${userData.lastName}`
     )).pipe(
       retryWhen(errors => 
         errors.pipe(
@@ -100,12 +97,16 @@ export class AuthService {
             if (index === this.retryAttempts) {
               throw error;
             }
+            console.error('Registration attempt failed:', error);
             return error;
           })
         )
       ),
       map(response => {
-        if (response.error) throw response.error;
+        if (response.error) {
+          console.error('Registration error response:', response.error);
+          throw response.error;
+        }
         
         const needsEmailVerification = !response.data?.session;
         if (needsEmailVerification) {
@@ -126,7 +127,13 @@ export class AuthService {
           needsEmailVerification: false
         };
       }),
-      catchError(error => this.handleAuthError(error))
+      catchError(error => {
+        console.error('Registration error caught:', error);
+        if (error.message?.includes('database') || error.message?.includes('saving')) {
+          return throwError(() => new Error('Unable to create user profile. Please try again later.'));
+        }
+        return this.handleAuthError(error);
+      })
     );
   }
 

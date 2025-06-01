@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, User, AuthResponse, AuthError, AuthApiError, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -7,18 +8,13 @@ import { environment } from '../../environments/environment';
 })
 export class SupabaseService {
   private supabase: SupabaseClient;
+  private _currentUser = new BehaviorSubject<User | null>(null);
+  currentUser$ = this._currentUser.asObservable();
   private readonly LOCK_RETRY_ATTEMPTS = 3;
   private readonly LOCK_RETRY_DELAY = 1000; // 1 second
 
   constructor() {
     console.log('Initializing Supabase with URL:', environment.supabase.supabaseUrl);
-    this.initializeSupabase();
-  }
-
-  private async initializeSupabase() {
-    // Clear any existing locks before initialization
-    await this.clearAuthLocks();
-    
     this.supabase = createClient(
       environment.supabase.supabaseUrl,
       environment.supabase.supabaseAnonKey,
@@ -26,11 +22,23 @@ export class SupabaseService {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: false
+          detectSessionInUrl: false,
+          flowType: 'pkce'
+        },
+        global: {
+          headers: {
+            'X-Client-Info': 'stock-tracker@1.0.0'
+          }
         }
       }
     );
+    this.initializeSupabase();
+  }
 
+  private async initializeSupabase() {
+    // Clear any existing locks before initialization
+    await this.clearAuthLocks();
+    
     // Log the configuration for debugging
     console.log('Supabase Configuration:', {
       url: environment.supabase.supabaseUrl,
@@ -44,34 +52,13 @@ export class SupabaseService {
       if (event === 'SIGNED_OUT') {
         await this.clearAuthLocks();
       }
+      this._currentUser.next(session?.user ?? null);
     });
-  }
 
-  private createCustomStorage() {
-    return {
-      getItem: (key: string): string | null => {
-        try {
-          return localStorage.getItem(key);
-        } catch (error) {
-          console.error('Error reading from localStorage:', error);
-          return null;
-        }
-      },
-      setItem: (key: string, value: string): void => {
-        try {
-          localStorage.setItem(key, value);
-        } catch (error) {
-          console.error('Error writing to localStorage:', error);
-        }
-      },
-      removeItem: (key: string): void => {
-        try {
-          localStorage.removeItem(key);
-        } catch (error) {
-          console.error('Error removing from localStorage:', error);
-        }
-      }
-    };
+    // Try to recover existing session
+    this.supabase.auth.getSession().then(({ data: { session } }) => {
+      this._currentUser.next(session?.user ?? null);
+    });
   }
 
   private async clearAuthLocks() {
@@ -129,7 +116,7 @@ export class SupabaseService {
     if (error instanceof AuthError) {
       return error;
     }
-    return new AuthApiError('Unknown error occurred', 500);
+    return new AuthApiError('Unknown error occurred', 500, 'UNEXPECTED_ERROR');
   }
 
   async getSession(): Promise<{ data: { session: Session | null }, error: AuthError | null }> {
@@ -147,16 +134,23 @@ export class SupabaseService {
     }
   }
 
-  async signUp(email: string, password: string, userData: any): Promise<AuthResponse> {
+  async signUp(email: string, password: string, fullName: string): Promise<AuthResponse> {
     try {
-      console.log('Attempting signup with:', { email, userData });
+      console.log('Attempting signup with:', { email, fullName });
       const result = await this.retryOperation(async () => {
+        const names = fullName.trim().split(' ');
+        const firstName = names[0];
+        const lastName = names.length > 1 ? names.slice(1).join(' ') : '';
+        
         const { data, error } = await this.supabase.auth.signUp({
           email,
           password,
           options: {
-            data: userData,
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            data: {
+              firstName,
+              lastName
+            },
+            emailRedirectTo: window.location.origin + '/auth/callback'
           }
         });
         if (error) throw error;
@@ -206,5 +200,31 @@ export class SupabaseService {
 
   onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
     return this.supabase.auth.onAuthStateChange(callback);
+  }
+
+  async getPortfolio() {
+    const { data, error } = await this.supabase
+      .from('stocks')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async addStock(symbol: string, shares: number, purchasePrice: number) {
+    const { data, error } = await this.supabase
+      .from('stocks')
+      .insert([
+        {
+          symbol: symbol.toUpperCase(),
+          shares,
+          purchase_price: purchasePrice
+        }
+      ])
+      .select();
+    
+    if (error) throw error;
+    return data;
   }
 } 
